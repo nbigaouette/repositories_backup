@@ -1,0 +1,224 @@
+#!/bin/bash
+
+# Written by Nicolas Bigaouette
+# nbigaouette@gmail.com
+# January 10th 2008
+# v0.3
+# http://bbs.archlinux.org/viewtopic.php?id=42083
+
+# To restore :
+# svnadmin load /path/to/reponame < /path/to/repo.dump
+# http://wiki.archlinux.org/index.php/Subversion_backup_and_restore
+
+now=`date +%Y%m%d_%Hh%M`
+pwd=`pwd`
+
+# Path containing links to folder containing repos
+repos_path="/svn"
+
+# Name of folder that will be created on remote hosts
+svn_backup=optimusprime_svn_backup
+
+# Temp directory
+#tmp=/tmp
+tmp=/home/nicolas/tmp
+
+# Logfile
+logfile=${tmp}/${svn_backup}/backup_of_${now}.log
+
+# Main user (for permissions)
+me=nicolas
+local_backup=/home/${me}/fichiers/backups/svn_repos
+
+# Compressiong type (tar.gz or 7z)
+compression="7z"
+
+# Sending type (scp or rsync)
+sending="rsync"
+
+# SCP options
+scp_options="-C -r -p"
+
+# Rsync options
+rsync_options="-rvzthP"
+
+# Server hosts and their respective path to send
+servers_hosts=(
+    "$me@soundwave:/home/nicolas/fichiers/backups/svn_repos_op/"
+    "$me@model:/home/nicolas/fichiers/backup/svn/"
+    "bigaouette@cluster:/home/bigaouette/fichiers/backup/svn/"
+    "$me@unicron:/raid/nicolas/repositories/svn"
+    "$me@sunstreaker:/home/nicolas/fichiers/backups/repositories/svn"
+)
+
+if [ `printf '%c' $0` == "/" ]; then
+    script=`dirname $0`
+else
+    script=`pwd`"/"`dirname $0`
+fi
+script="$script/`basename $0`"
+
+backup() {
+
+    mkdir -p ${tmp}/${svn_backup} || return 2
+
+    echo ${now} > ${logfile}
+
+    cd ${repos_path}
+    for fullname in *; do
+        # Iteration through users
+
+        cd ${tmp}/${svn_backup} || return 3
+
+        username=`basename ${fullname}`
+
+        # Search for svnserve.conf files, and extract the repo name from its path
+        repos=`find -L ${repos_path}/${username} -name svnserve.conf | sed "s|/conf/svnserve.conf||g"`
+
+        mkdir -p ${username}
+        cd ${username}
+
+        echo "*********************************************************" | tee -a ${logfile}
+        echo "*********************************************************" | tee -a ${logfile}
+        echo "Backing up ${username}'s repos..." | tee -a ${logfile}
+        echo "*********************************************************" | tee -a ${logfile}
+        for repo in ${repos}; do
+            # Iteration through user's repo
+
+            # Get last repo revision
+            repo_last_rev=`svn log file://${repo} --limit 1 | sed -n 's/^r\([^ ]*\) .*$/\1/p'`
+
+            repo_basename=`basename ${repo}`
+            mkdir -p ${repo_basename}
+            cd ${repo_basename}
+
+            # Name of dump file
+            dump_name="${repo_basename}_r${repo_last_rev}" || return 4
+
+            # Verify if dump is to be done
+            if [ -s ${dump_name}.dump.*.md5 ]; then
+                md5sum_ok=`md5sum --status -c ${dump_name}.dump.*.md5`
+                if [[ "${md5sum_ok}" == "1" ]]; then
+                    do_dump=1   # Md5sum is bad, re-dump.
+                else
+                    do_dump=0   # Md5sum is ok, don't re-dump.
+                fi
+            else
+                do_dump=1       # Md5sum file is not present, re-dump.
+            fi
+
+            if [[ "$do_dump" == "1" ]]; then
+                # Dump the repo and md5sum it
+
+                echo "*********************************************************" | tee -a ${logfile}
+                echo "    (1/2) Dumping ${username}'s ${repo_basename}..." | tee -a ${logfile}
+                # Extract repo info and save it to log file
+                #svn info file://${repo} >> ${logfile}
+                svn info svn+ssh://optimusprime.selfip.net${repo} | tee -a ${logfile}
+
+                svnadmin dump ${repo} > ${dump_name}.dump | tee -a ${logfile} || return 5
+
+                #touch ${dump_name}.dump  | tee -a ${logfile} || return 5
+                chown ${me}:users ${dump_name}.dump
+                md5sum ${dump_name}.dump > ${dump_name}.dump.md5
+
+                echo "    (2/2) Compressing ${username}'s ${repo_basename}..." | tee -a ${logfile}
+
+                if [[ "$compression" == "tar.gz" ]]; then
+                    # Tar.gz compression
+                    tar --remove-files -zcvf ${dump_name}.dump.tar.gz \
+                        ${dump_name}.dump ${dump_name}.dump.md5 || return 6
+                    md5sum ${dump_name}.dump.tar.gz > ${dump_name}.dump.tar.gz.md5
+                elif [[ "$compression" == "7z" ]]; then
+                    # 7zip compression
+                    7z a ${dump_name}.dump.7z ${dump_name}.dump ${dump_name}.dump.md5
+                    rm -f ${dump_name}.dump ${dump_name}.dump.md5
+                    md5sum ${dump_name}.dump.7z > ${dump_name}.dump.7z.md5
+                fi
+            else
+                echo "    ${repo_basename}: No dump needed."
+            fi
+
+            cd ..
+        done
+        echo "*********************************************************" | tee -a ${logfile}
+        echo "Done backing up ${username}'s repos..." | tee -a ${logfile}
+    done
+    echo "*********************************************************" | tee -a ${logfile}
+    echo "*********************************************************" | tee -a ${logfile}
+
+    # Copy of the script
+    cp -f $script ${tmp}/${svn_backup}/
+
+    # Local copy
+    #cmd_local="cp -R ${tmp}/${svn_backup} ${local_backup}"
+	cmd_local="rsync --perms --owner --group --verbose --recursive ${tmp}/${svn_backup} ${local_backup}"
+    echo "Copying files locally..." | tee -a ${logfile}
+    chown -R ${me}:users ${tmp}/${svn_backup}
+    echo ${cmd_local} | tee -a ${logfile}
+    ${cmd_local} | tee -a ${logfile}
+    chown -R ${me}:users ${local_backup}
+
+    return 0
+}
+
+sending_scp() {
+
+    cd ${tmp} || return 7
+
+    # SCP commands
+    for i in `seq ${#servers_hosts[*]}`; do
+        scp_cmd="scp ${scp_options} ${svn_backup} ${servers_hosts[i-1]}"
+        echo "Sending archive to ${servers_hosts}..." | tee -a ${logfile}
+        echo ${scp_cmd} | tee -a ${logfile}
+        ${scp_cmd} || return 8
+    done
+
+    return 0
+}
+
+sending_rsync() {
+
+    cd ${tmp} || return 7
+
+    # Rsync commands
+    for i in `seq ${#servers_hosts[*]}`; do
+        rsync_cmd="rsync ${rsync_options} ${svn_backup} ${servers_hosts[i-1]}"
+        echo "Sending archive to ${servers_hosts}..." | tee -a ${logfile}
+        echo ${rsync_cmd} | tee -a ${logfile}
+        ${rsync_cmd} || return 9
+    done
+
+    return 0
+}
+
+clean_tmp() {
+    rm -fr ${tmp}/${svn_backup} || return 10
+    return 0
+}
+
+# Call the backup function
+backup
+
+# Check for errors
+return_value=$?
+if [[ "${return_value}" != 0 ]]; then
+    echo "ERROR: The backup failed at ${return_value}"
+fi
+
+# Send the files
+if [[ "$sending" == "scp" ]]; then
+    sending_scp
+elif [[ "$sending" == "rsync" ]]; then
+    sending_rsync
+fi
+
+# Check for errors
+return_value=$?
+if [[ "${return_value}" != 0 ]]; then
+    echo "ERROR: The backup failed at ${return_value}"
+else
+    echo "Backup of subversion repos successful"
+    # Clean tmp
+    #clean_tmp
+fi
