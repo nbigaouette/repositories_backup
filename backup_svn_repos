@@ -17,14 +17,14 @@ pwd=`pwd`
 repos_path="/svn"
 
 # Name of folder that will be created on remote hosts
-svn_backup=optimusprime_svn_backup
+svn_backup=svn
 
 # Temp directory
 #tmp=/tmp
 tmp=/home/nicolas/tmp
 
 # Logfile
-logfile=${tmp}/${svn_backup}/backup_of_${now}.log
+logfile=${tmp}/${svn_backup}/logs/backup_of_${now}.log
 
 # Main user (for permissions)
 me=nicolas
@@ -45,10 +45,10 @@ rsync_options="-rvzthP"
 # Server hosts and their respective path to send
 servers_hosts=(
     "$me@soundwave:/home/nicolas/fichiers/backups/svn_repos_op/"
-    "$me@model:/home/nicolas/fichiers/backup/svn/"
-    "bigaouette@cluster:/home/bigaouette/fichiers/backup/svn/"
-    "$me@unicron:/raid/nicolas/repositories/svn"
-    "$me@sunstreaker:/home/nicolas/fichiers/backups/repositories/svn"
+#     "$me@unicron:/raid/nicolas/repositories/svn"
+#     "$me@sunstreaker:/home/nicolas/fichiers/backups/repositories/svn"
+#     "$me@model:/home/nicolas/fichiers/backup/svn/"
+#     "bigaouette@cluster:/home/bigaouette/fichiers/backup/svn/"
 )
 
 if [ `printf '%c' $0` == "/" ]; then
@@ -206,12 +206,12 @@ if [[ "${return_value}" != 0 ]]; then
     echo "ERROR: The backup failed at ${return_value}"
 fi
 
-# Send the files
-if [[ "$sending" == "scp" ]]; then
-    sending_scp
-elif [[ "$sending" == "rsync" ]]; then
-    sending_rsync
-fi
+# # Send the files
+# if [[ "$sending" == "scp" ]]; then
+#     sending_scp
+# elif [[ "$sending" == "rsync" ]]; then
+#     sending_rsync
+# fi
 
 # Check for errors
 return_value=$?
