@@ -44,11 +44,12 @@ rsync_options="-rvzthP"
 
 # Server hosts and their respective path to send
 servers_hosts=(
-    "$me@soundwave:/home/nicolas/fichiers/backups/svn_repos_op/"
-#     "$me@unicron:/raid/nicolas/repositories/svn"
-#     "$me@sunstreaker:/home/nicolas/fichiers/backups/repositories/svn"
+    "$me@soundwave:/home/nicolas/fichiers/backups/svn_repos/"
+    "$me@unicron:/raid/nicolas/repositories/svn"
+    "$me@grimlock:/home/nicolas/backups/svn_repos/"
+    "$me@sunstreaker:/home/nicolas/fichiers/backups/repositories/svn"
 #     "$me@model:/home/nicolas/fichiers/backup/svn/"
-#     "bigaouette@cluster:/home/bigaouette/fichiers/backup/svn/"
+    "bigaouette@cluster:/home/bigaouette/fichiers/backup/svn/"
 )
 
 if [ `printf '%c' $0` == "/" ]; then
@@ -62,6 +63,7 @@ backup() {
 
     mkdir -p ${tmp}/${svn_backup} || return 2
 
+    mkdir -p `dirname ${logfile}`
     echo ${now} > ${logfile}
 
     cd ${repos_path}
@@ -152,7 +154,7 @@ backup() {
 
     # Local copy
     #cmd_local="cp -R ${tmp}/${svn_backup} ${local_backup}"
-	cmd_local="rsync --perms --owner --group --verbose --recursive ${tmp}/${svn_backup} ${local_backup}"
+    cmd_local="rsync --perms --owner --group --verbose --recursive ${tmp}/${svn_backup} ${local_backup}"
     echo "Copying files locally..." | tee -a ${logfile}
     chown -R ${me}:users ${tmp}/${svn_backup}
     echo ${cmd_local} | tee -a ${logfile}
@@ -206,12 +208,12 @@ if [[ "${return_value}" != 0 ]]; then
     echo "ERROR: The backup failed at ${return_value}"
 fi
 
-# # Send the files
-# if [[ "$sending" == "scp" ]]; then
-#     sending_scp
-# elif [[ "$sending" == "rsync" ]]; then
-#     sending_rsync
-# fi
+# Send the files
+if [[ "$sending" == "scp" ]]; then
+    sending_scp
+elif [[ "$sending" == "rsync" ]]; then
+    sending_rsync
+fi
 
 # Check for errors
 return_value=$?
