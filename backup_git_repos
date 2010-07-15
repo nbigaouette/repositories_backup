@@ -1,0 +1,180 @@
+#!/bin/bash
+
+# Written by Nicolas Bigaouette
+# nbigaouette@gmail.com
+# July 2010
+# v0.1
+# http://stackoverflow.com/questions/1887364/git-clone-to-external-drive-for-backup
+
+now=`date +%Y%m%d_%Hh%M`
+pwd=`pwd`
+
+# Path containing links to folder containing repos
+repos_path="/git"
+
+me=nicolas
+
+backup_servers=(
+    "$me@soundwave"     "/home/nicolas/fichiers/backups/git_repos/"
+    "$me@unicron"       "/raid/nicolas/repositories/git"
+    "$me@grimlock"      "/home/nicolas/backups/git_repos/"
+    "$me@sunstreaker"   "/home/nicolas/fichiers/backups/repositories/git"
+)
+
+logfile=/tmp/git_backup_${now}.log
+
+stars="*********************************************************"
+
+
+list_users() {
+    unset users
+    cd ${repos_path}
+    users=(`/bin/ls -d *`)
+    echo ${users[@]}
+    cd - > /dev/null
+}
+
+list_user_repos() {
+    if [[ -z "$1" ]]; then
+        echo "Usage: list_user_repos <user>"
+        return
+    fi
+    local_user="$1"
+
+    cd ${repos_path}/${local_user}
+    #repos=(`/bin/ls -d *`)
+    repos=(`find . -maxdepth 1 -mindepth 1 -type d | sed "s|./||g"`)
+    cd - > /dev/null
+
+    #echo "repos (${#repos[@]}) = ${repos[@]}"
+    echo ${repos[@]}
+}
+
+create_remote_repo() {
+    if [[ -z "$1" || -z "$2" || -z "$3" || -z "$4" ]]; then
+        echo "Usage: create_remote_repo <local_user> <local_repo> <ssh_server> <remote_location>"
+        return
+    fi
+    local_user="$1"
+    local_repo="$2"
+    ssh_server="$3"
+    remote_location="$4"
+
+    echo "Making sure a bare git repo exist at ${remote_repo} on ${ssh_server}..."  | tee -a ${logfile}
+
+    remote_repo="${remote_location}/${local_user}/${local_repo}"
+    cmd="mkdir -p ${remote_repo} && cd ${remote_repo} && if [[ ! -e 'config' ]]; then git --bare init; fi"
+    echo "ssh ${ssh_server} $cmd"                                                   | tee -a ${logfile}
+    ssh ${ssh_server} ${cmd}
+}
+
+setup_repo_for_pushing() {
+    if [[ -z "$1" || -z "$2" || -z "$3" || -z "$4" ]]; then
+        echo "Usage: setup_repo_for_pushing <local_user> <local_repo> <ssh_server> <remote_location>"
+        return
+    fi
+    local_user="$1"
+    local_repo="$2"
+    ssh_server="$3"
+    remote_location="$4"
+
+    echo "Setting up ${local_user}'s ${local_repo} to push to ${remote_location} on ${ssh_server}..."  | tee -a ${logfile}
+
+    cd ${repos_path}/${local_user}/${local_repo}
+    remotes=(`git remote`)
+    remote_present="false"
+    for remote in ${remotes[@]}; do
+        if [[ "${remote}" == "backup_${ssh_server}" ]]; then
+            remote_present="true"
+        fi
+    done
+    if [[ "${remote_present}" == "false" ]]; then
+        git remote add backup_${ssh_server} ssh://${ssh_server}${remote_location}/${local_user}/${local_repo}
+        git config remote.backup_${ssh_server}.mirror true
+    fi
+    cd - > /dev/null
+}
+
+push_to_backup_server() {
+    if [[ -z "$1" || -z "$2" || -z "$3" ]]; then
+        echo "Usage: push_to_backup_server <local_user> <local_repo> <ssh_server>"
+        return
+    fi
+    local_user="$1"
+    local_repo="$2"
+    ssh_server="$3"
+
+    echo "Pushing ${local_user}'s ${local_repo} to push to ${ssh_server}..."    | tee -a ${logfile}
+
+    cd ${repos_path}/${local_user}/${local_repo}
+    git push backup_${ssh_server}
+    cd - > /dev/null
+}
+
+backup_repo() {
+    if [[ -z "$1" || -z "$2" || -z "$3" ]]; then
+        echo "Usage: backup_repo <local_user> <local_repo> <ssh_server> <remote_location>"
+        return
+    fi
+    local_user="$1"
+    local_repo="$2"
+    ssh_server="$3"
+    remote_location="$4"
+
+    create_remote_repo ${local_user} ${local_repo} ${ssh_server} ${remote_location}
+    echo "${stars}"                                                             | tee -a ${logfile}
+
+    setup_repo_for_pushing ${local_user} ${local_repo} ${ssh_server} ${remote_location}
+    echo "${stars}"                                                             | tee -a ${logfile}
+
+    push_to_backup_server ${local_user} ${local_repo} ${ssh_server}
+    echo "${stars}"                                                             | tee -a ${logfile}
+
+}
+
+backup_all_repos() {
+
+    unset users
+    users=`list_users`
+    for user in ${users[@]}; do
+        echo "${stars}"                                                         | tee -a ${logfile}
+        echo "${stars}"                                                         | tee -a ${logfile}
+        echo "Backing up ${user}'s repos..."                                    | tee -a ${logfile}
+
+        unset repos
+        repos=`list_user_repos ${user}`
+        for repo in ${repos[@]}; do
+        echo "${stars}"                                                         | tee -a ${logfile}
+            echo "${user}'s ${repo}..."                                         | tee -a ${logfile}
+
+            for (( i=0; i<${#backup_servers[@]}; i=i+2 )); do
+
+                backup_repo ${user} ${repo} ${backup_servers[${i}]} ${backup_servers[$((${i}+1))]}
+#                 create_remote_repo ${user} ${repo} ${backup_servers[${i}]} ${backup_servers[$((${i}+1))]}
+#                 echo "${stars}"                                                 | tee -a ${logfile}
+#                 setup_repo_for_pushing ${user} ${repo} ${backup_servers[${i}]} ${backup_servers[$((${i}+1))]}
+#                 echo "${stars}"                                                 | tee -a ${logfile}
+#                 push_to_backup_server ${user} ${repo} ${backup_servers[${i}]}
+#                 echo "${stars}"                                                 | tee -a ${logfile}
+            done
+            echo "${stars}"                                                     | tee -a ${logfile}
+        done
+
+        echo "${stars}"                                                         | tee -a ${logfile}
+        echo "Done backing up ${user}'s repos..."                               | tee -a ${logfile}
+
+    done
+}
+
+send_log_to_servers() {
+    echo "Sending logs..."
+    for (( i=0; i<${#backup_servers[@]}; i=i+2 )); do
+        ssh ${backup_servers[${i}]} "mkdir -p ${backup_servers[$((${i}+1))]}/logs/"
+        scp ${logfile} ${backup_servers[${i}]}:${backup_servers[$((${i}+1))]}/logs/`basename ${logfile}`
+    done
+}
+
+
+backup_all_repos
+send_log_to_servers
+
