@@ -186,7 +186,7 @@ sending_rsync() {
     # Rsync commands
     for i in `seq ${#servers_hosts[*]}`; do
         rsync_cmd="rsync ${rsync_options} ${svn_backup} ${servers_hosts[i-1]}"
-        echo "Sending archive to ${servers_hosts}..." | tee -a ${logfile}
+        echo "Sending archive to ${servers_hosts[i-1]}..." | tee -a ${logfile}
         echo ${rsync_cmd} | tee -a ${logfile}
         ${rsync_cmd} || return 9
     done
