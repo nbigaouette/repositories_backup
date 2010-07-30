@@ -97,8 +97,8 @@ setup_repo_for_pushing() {
         fi
     done
     if [[ "${remote_present}" == "false" ]]; then
-        git remote add backup_${ssh_server} ssh://${ssh_server}${remote_location}/${local_user}/${local_repo} 2&>1 | tee -a ${logfile}
-        git config remote.backup_${ssh_server}.mirror true                 2&>1 | tee -a ${logfile}
+        git remote add backup_${ssh_server} ssh://${ssh_server}${remote_location}/${local_user}/${local_repo} 2>&1 | tee -a ${logfile}
+        git config remote.backup_${ssh_server}.mirror true                 2>&1 | tee -a ${logfile}
     fi
     cd - > /dev/null
 }
@@ -116,7 +116,7 @@ push_to_backup_server() {
     log "Pushing ${local_user}'s ${local_repo} to push to ${ssh_server}..."     | tee -a ${logfile}
 
     cd ${repos_path}/${local_user}/${local_repo}
-    git push backup_${ssh_server}                                          2&>1 | tee -a ${logfile}
+    git push backup_${ssh_server}                                          2>&1 | tee -a ${logfile}
     cd - > /dev/null
 }
 
