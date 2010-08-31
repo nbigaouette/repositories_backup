@@ -2,8 +2,9 @@
 
 # Written by Nicolas Bigaouette
 # nbigaouette@gmail.com
-# January 10th 2008
-# v0.3.1
+# August 31st 2010
+# v0.4
+# http://github.com/nbigaouette/repositories_backup
 # http://bbs.archlinux.org/viewtopic.php?id=42083
 
 # To restore :
@@ -25,6 +26,10 @@ tmp=/home/nicolas/tmp
 
 # Logfile
 logfile=${tmp}/${svn_backup}/logs/backup_of_${now}.log
+
+# Lockfile
+#lockfile=$tmp/`basename ${0}`.lock
+lockfile=/tmp/`basename ${0}`.lock
 
 # Main user (for permissions)
 me=nicolas
@@ -199,28 +204,41 @@ clean_tmp() {
     return 0
 }
 
-# Call the backup function
-backup
+# ***************************************************************************
 
-# Check for errors
-return_value=$?
-if [[ "${return_value}" != 0 ]]; then
-    echo "ERROR: The backup failed at ${return_value}"
-fi
-
-# Send the files
-if [[ "$sending" == "scp" ]]; then
-    sending_scp
-elif [[ "$sending" == "rsync" ]]; then
-    sending_rsync
-fi
-
-# Check for errors
-return_value=$?
-if [[ "${return_value}" != 0 ]]; then
-    echo "ERROR: The backup failed at ${return_value}"
+if [[ -e $lockfile ]]; then
+    echo "Logfile already exist! Exiting."
+    exit
 else
-    echo "Backup of subversion repos successful"
-    # Clean tmp
-    #clean_tmp
+    # Create lock file
+    touch $lockfile
+
+    # Call the backup function
+    backup
+
+    # Check for errors
+    return_value=$?
+    if [[ "${return_value}" != 0 ]]; then
+        echo "ERROR: The backup failed at ${return_value}"
+    fi
+
+    # Send the files
+    if [[ "$sending" == "scp" ]]; then
+        sending_scp
+    elif [[ "$sending" == "rsync" ]]; then
+        sending_rsync
+    fi
+
+    # Check for errors
+    return_value=$?
+    if [[ "${return_value}" != 0 ]]; then
+        echo "ERROR: The backup failed at ${return_value}"
+    else
+        echo "Backup of subversion repos successful"
+        # Clean tmp
+        #clean_tmp
+    fi
+
+    # Remove the lock file
+    rm -f $lockfile
 fi
