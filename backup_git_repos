@@ -21,7 +21,8 @@ backup_servers=(
     "$me@sunstreaker"   "/home/nicolas/fichiers/backups/repositories/git"
 )
 
-logfile=/tmp/git_backup_${now}.log
+logdir=/tmp/git_backup_logs
+logfile=${logdir}/git_backup_${now}.log
 
 stars="*********************************************************"
 sharp="#########################################################"
