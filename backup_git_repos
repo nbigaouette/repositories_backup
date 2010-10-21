@@ -104,7 +104,7 @@ setup_repo_for_pushing() {
                                                                                 2>&1 | tee -a ${logfile}
 
     cd ${repos_path}/${local_user}/${local_repo}
-    remotes=(`git remote`)
+    remotes=(`${git} remote`)
     remote_present="false"
     for remote in ${remotes[@]}; do
 
