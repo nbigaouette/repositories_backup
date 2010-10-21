@@ -58,7 +58,8 @@ list_user_repos() {
 
     cd ${repos_path}/${local_user}
     #repos=(`/bin/ls -d *`)
-    repos=(`find . -maxdepth 1 -mindepth 1 -type d | sed "s|./||g"`)
+#     repos=(`find . -maxdepth 1 -mindepth 1 -type d | sed "s|./||g"`)
+    repos=(`find . -type d -name "*.git" | sed "s|^./||g"`)
     cd - > /dev/null
 
     #echo "repos (${#repos[@]}) = ${repos[@]}"
