@@ -121,6 +121,10 @@ setup_repo_for_pushing() {
                                                                                 2>&1 | tee -a ${logfile}
         ${sudo/USER/${local_user}} ${git} config remote.${remote_name}.mirror true
                                                                                 2>&1 | tee -a ${logfile}
+    else
+        # Make sure the url of the remote is set correctly
+        ${sudo/USER/${local_user}} ${git} remote set-url ${remote_name} ssh://${ssh_server}${remote_location}/${local_user}/${local_repo} \
+                                                                                2>&1 | tee -a ${logfile}
     fi
     cd - > /dev/null
 }
