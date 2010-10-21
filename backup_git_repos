@@ -76,10 +76,12 @@ create_remote_repo() {
     ssh_server="$3"
     remote_location="$4"
 
-    echo "${sharp}"
-    log "Making sure a bare git repo exist at ${remote_repo} on ${ssh_server}..."   | tee -a ${logfile}
-
     remote_repo="${remote_location}/${local_user}/${local_repo}"
+
+    echo "${sharp}"
+    log "Making sure a bare git repo exist at ${remote_repo} on ${ssh_server}..." \
+                                                                                2>&1 | tee -a ${logfile}
+
     cmd="mkdir -p ${remote_repo} && cd ${remote_repo} && if [[ ! -e 'config' ]]; then git --bare init; fi"
     echo "ssh ${ssh_server} $cmd"                                                   | tee -a ${logfile}
     ssh ${ssh_server} ${cmd}
