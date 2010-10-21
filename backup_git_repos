@@ -30,6 +30,13 @@ c="\e[36;1m"
 n="\e[0m"
 
 git="git"
+sudo=""
+if [[ "$UID" == "0" ]]; then
+    sudo="sudo -u USER"
+fi
+
+[[ ! -e "${logdir}" ]] && mkdir -p ${logdir}
+
 log() {
     echo -e "${c}${@}${n}"
 }
