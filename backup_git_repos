@@ -29,6 +29,7 @@ sharp="#########################################################"
 c="\e[36;1m"
 n="\e[0m"
 
+s="    "
 git="git"
 sudo=""
 if [[ "$UID" == "0" ]]; then
@@ -79,11 +80,11 @@ create_remote_repo() {
     remote_repo="${remote_location}/${local_user}/${local_repo}"
 
     echo "${sharp}"
-    log "Making sure a bare git repo exist at ${remote_repo} on ${ssh_server}..." \
+    log "${s}${s}${s}Making sure a bare git repo exist at ${remote_repo} on ${ssh_server}..." \
                                                                                 2>&1 | tee -a ${logfile}
 
     cmd="mkdir -p ${remote_repo} && cd ${remote_repo} && if [[ ! -e 'config' ]]; then git --bare init; fi"
-    echo "ssh ${ssh_server} $cmd"                                               2>&1 | tee -a ${logfile}
+    #echo "${s}${s}${s}ssh ${ssh_server} $cmd"                                   2>&1 | tee -a ${logfile}
     ssh ${ssh_server} ${cmd}
 }
 
@@ -100,7 +101,7 @@ setup_repo_for_pushing() {
     remote_name="backup_${ssh_server}"
 
     echo "${sharp}"
-    log "Setting up ${local_user}'s ${local_repo} to push to ${remote_location} on ${ssh_server}..." \
+    log "${s}${s}${s}Setting up ${local_user}'s ${local_repo} to push to ${remote_location} on ${ssh_server}..." \
                                                                                 2>&1 | tee -a ${logfile}
 
     cd ${repos_path}/${local_user}/${local_repo}
@@ -157,10 +158,11 @@ push_to_backup_server() {
     ssh_server="$3"
 
     echo "${sharp}"
-    log "Pushing ${local_user}'s ${local_repo} to push to ${ssh_server}..."     2>&1 | tee -a ${logfile}
+    log "${s}${s}${s}Pushing ${local_user}'s ${local_repo} to push to ${ssh_server}..." \
 
     cd ${repos_path}/${local_user}/${local_repo}
     cmd="${git} push backup_${ssh_server}"
+    echo "${s}${s}${s}$cmd"                                                     2>&1 | tee -a ${logfile}
     echo $cmd                                                                   2>&1 | tee -a ${logfile}
     $cmd                                                                        2>&1 | tee -a ${logfile}
 
@@ -207,10 +209,10 @@ backup_all_repos() {
         repos=`list_user_repos ${user}`
         for (( i=0; i<${#backup_servers[@]}; i=i+2 )); do
             echo "    ********************************************************" 2>&1 | tee -a ${logfile}
-            log  "    Sending ${user}'s repos to ${backup_servers[${i}]}..."    2>&1 | tee -a ${logfile}
+            log  "${s}Sending ${user}'s repos to ${backup_servers[${i}]}..."    2>&1 | tee -a ${logfile}
 
             for repo in ${repos[@]}; do
-                log "        Sending ${user}'s ${repo}..."                      2>&1 | tee -a ${logfile}
+                log "${s}${s}Sending ${user}'s ${repo} to ${backup_servers[${i}]}..." \
 
                 backup_repo ${user} ${repo} ${backup_servers[${i}]} ${backup_servers[$((${i}+1))]}
             done
