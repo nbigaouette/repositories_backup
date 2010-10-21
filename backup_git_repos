@@ -129,6 +129,24 @@ setup_repo_for_pushing() {
     cd - > /dev/null
 }
 
+list_local_branches() {
+    ${git} branch | grep -v master | sed "s|\* ||g"
+}
+
+push_branch() {
+    branch="${1}"
+    remote="${2}"
+    cmd1="${git} push ${remote} ${branch}:refs/heads/${branch}"
+    cmd2="${git} config branch.${branch}.remote ${remote}"
+    cmd3="${git} config branch.${branch}.merge refs/heads/${branch}"
+    echo $cmd1                                                                  2>&1 | tee -a ${logfile}
+    $cmd1                                                                       2>&1 | tee -a ${logfile}
+    echo $cmd1                                                                  2>&1 | tee -a ${logfile}
+    $cmd2                                                                       2>&1 | tee -a ${logfile}
+    echo $cmd3                                                                  2>&1 | tee -a ${logfile}
+    $cmd3                                                                       2>&1 | tee -a ${logfile}
+}
+
 push_to_backup_server() {
     if [[ -z "$1" || -z "$2" || -z "$3" ]]; then
         echo "Usage: push_to_backup_server <local_user> <local_repo> <ssh_server>"
@@ -145,6 +163,14 @@ push_to_backup_server() {
     cmd="${git} push backup_${ssh_server}"
     echo $cmd                                                                   2>&1 | tee -a ${logfile}
     $cmd                                                                        2>&1 | tee -a ${logfile}
+
+    # No need to push branches. Setting up a mirror in setup_repo_for_pushing() is enough
+    #branches=(`list_local_branches`)
+    #log "Pushing branches: ${branches[*]}"                                      2>&1 | tee -a ${logfile}
+    #for branch in ${branches[*]}; do
+    #    push_branch ${branch} backup_${ssh_server}
+    #done
+
     cd - > /dev/null
 }
 
