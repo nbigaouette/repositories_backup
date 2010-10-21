@@ -25,7 +25,6 @@ logdir=/tmp/git_backup_logs
 logfile=${logdir}/git_backup_${now}.log
 
 stars="*********************************************************"
-sharp="#########################################################"
 c="\e[36;1m"
 n="\e[0m"
 
@@ -79,7 +78,6 @@ create_remote_repo() {
 
     remote_repo="${remote_location}/${local_user}/${local_repo}"
 
-    echo "${sharp}"
     log "${s}${s}${s}Making sure a bare git repo exist at ${remote_repo} on ${ssh_server}..." \
                                                                                 2>&1 | tee -a ${logfile}
 
@@ -100,7 +98,6 @@ setup_repo_for_pushing() {
 
     remote_name="backup_${ssh_server}"
 
-    echo "${sharp}"
     log "${s}${s}${s}Setting up ${local_user}'s ${local_repo} to push to ${remote_location} on ${ssh_server}..." \
                                                                                 2>&1 | tee -a ${logfile}
 
@@ -157,13 +154,12 @@ push_to_backup_server() {
     local_repo="$2"
     ssh_server="$3"
 
-    echo "${sharp}"
     log "${s}${s}${s}Pushing ${local_user}'s ${local_repo} to push to ${ssh_server}..." \
+                                                                                2>&1 | tee -a ${logfile}
 
     cd ${repos_path}/${local_user}/${local_repo}
     cmd="${git} push backup_${ssh_server}"
     echo "${s}${s}${s}$cmd"                                                     2>&1 | tee -a ${logfile}
-    echo $cmd                                                                   2>&1 | tee -a ${logfile}
     $cmd                                                                        2>&1 | tee -a ${logfile}
 
     # No need to push branches. Setting up a mirror in setup_repo_for_pushing() is enough
@@ -186,14 +182,9 @@ backup_repo() {
     ssh_server="$3"
     remote_location="$4"
 
-    create_remote_repo ${local_user} ${local_repo} ${ssh_server} ${remote_location}
-    echo "${stars}"                                                             2>&1 | tee -a ${logfile}
-
+    create_remote_repo     ${local_user} ${local_repo} ${ssh_server} ${remote_location}
     setup_repo_for_pushing ${local_user} ${local_repo} ${ssh_server} ${remote_location}
-    echo "${stars}"                                                             2>&1 | tee -a ${logfile}
-
-    push_to_backup_server ${local_user} ${local_repo} ${ssh_server}
-    echo "${stars}"                                                             2>&1 | tee -a ${logfile}
+    push_to_backup_server  ${local_user} ${local_repo} ${ssh_server}
 
 }
 
@@ -208,18 +199,16 @@ backup_all_repos() {
         unset repos
         repos=`list_user_repos ${user}`
         for (( i=0; i<${#backup_servers[@]}; i=i+2 )); do
-            echo "    ********************************************************" 2>&1 | tee -a ${logfile}
             log  "${s}Sending ${user}'s repos to ${backup_servers[${i}]}..."    2>&1 | tee -a ${logfile}
 
             for repo in ${repos[@]}; do
                 log "${s}${s}Sending ${user}'s ${repo} to ${backup_servers[${i}]}..." \
+                                                                                2>&1 | tee -a ${logfile}
 
                 backup_repo ${user} ${repo} ${backup_servers[${i}]} ${backup_servers[$((${i}+1))]}
             done
-            echo "    ********************************************************" 2>&1 | tee -a ${logfile}
         done
 
-        echo "${stars}"                                                         2>&1 | tee -a ${logfile}
         log "Done backing up ${user}'s repos..."                                2>&1 | tee -a ${logfile}
 
     done
