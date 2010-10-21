@@ -107,6 +107,10 @@ setup_repo_for_pushing() {
     remotes=(`git remote`)
     remote_present="false"
     for remote in ${remotes[@]}; do
+
+        # Prune the remote's branches.
+        ${sudo/USER/${local_user}} ${git} remote prune ${remote}                2>&1 | tee -a ${logfile}
+
         if [[ "${remote}" == "${remote_name}" ]]; then
             remote_present="true"
         fi
