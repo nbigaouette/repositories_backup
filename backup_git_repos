@@ -83,7 +83,7 @@ create_remote_repo() {
                                                                                 2>&1 | tee -a ${logfile}
 
     cmd="mkdir -p ${remote_repo} && cd ${remote_repo} && if [[ ! -e 'config' ]]; then git --bare init; fi"
-    echo "ssh ${ssh_server} $cmd"                                                   | tee -a ${logfile}
+    echo "ssh ${ssh_server} $cmd"                                               2>&1 | tee -a ${logfile}
     ssh ${ssh_server} ${cmd}
 }
 
@@ -98,7 +98,8 @@ setup_repo_for_pushing() {
     remote_location="$4"
 
     echo "${sharp}"
-    log "Setting up ${local_user}'s ${local_repo} to push to ${remote_location} on ${ssh_server}..."  | tee -a ${logfile}
+    log "Setting up ${local_user}'s ${local_repo} to push to ${remote_location} on ${ssh_server}..." \
+                                                                                2>&1 | tee -a ${logfile}
 
     cd ${repos_path}/${local_user}/${local_repo}
     remotes=(`git remote`)
@@ -125,10 +126,12 @@ push_to_backup_server() {
     ssh_server="$3"
 
     echo "${sharp}"
-    log "Pushing ${local_user}'s ${local_repo} to push to ${ssh_server}..."     | tee -a ${logfile}
+    log "Pushing ${local_user}'s ${local_repo} to push to ${ssh_server}..."     2>&1 | tee -a ${logfile}
 
     cd ${repos_path}/${local_user}/${local_repo}
-    git push backup_${ssh_server}                                          2>&1 | tee -a ${logfile}
+    cmd="${git} push backup_${ssh_server}"
+    echo $cmd                                                                   2>&1 | tee -a ${logfile}
+    $cmd                                                                        2>&1 | tee -a ${logfile}
     cd - > /dev/null
 }
 
@@ -143,13 +146,13 @@ backup_repo() {
     remote_location="$4"
 
     create_remote_repo ${local_user} ${local_repo} ${ssh_server} ${remote_location}
-    echo "${stars}"                                                             | tee -a ${logfile}
+    echo "${stars}"                                                             2>&1 | tee -a ${logfile}
 
     setup_repo_for_pushing ${local_user} ${local_repo} ${ssh_server} ${remote_location}
-    echo "${stars}"                                                             | tee -a ${logfile}
+    echo "${stars}"                                                             2>&1 | tee -a ${logfile}
 
     push_to_backup_server ${local_user} ${local_repo} ${ssh_server}
-    echo "${stars}"                                                             | tee -a ${logfile}
+    echo "${stars}"                                                             2>&1 | tee -a ${logfile}
 
 }
 
@@ -158,25 +161,25 @@ backup_all_repos() {
     unset users
     users=`list_users`
     for user in ${users[@]}; do
-        echo "${stars}"                                                         | tee -a ${logfile}
-        log "Backing up ${user}'s repos..."                                     | tee -a ${logfile}
+        echo "${stars}"                                                         2>&1 | tee -a ${logfile}
+        log "Backing up ${user}'s repos..."                                     2>&1 | tee -a ${logfile}
 
         unset repos
         repos=`list_user_repos ${user}`
         for (( i=0; i<${#backup_servers[@]}; i=i+2 )); do
-            echo "    ********************************************************" | tee -a ${logfile}
-            log  "    Sending ${user}'s repos to ${backup_servers[${i}]}..."    | tee -a ${logfile}
+            echo "    ********************************************************" 2>&1 | tee -a ${logfile}
+            log  "    Sending ${user}'s repos to ${backup_servers[${i}]}..."    2>&1 | tee -a ${logfile}
 
             for repo in ${repos[@]}; do
-                log "        Sending ${user}'s ${repo}..."                      | tee -a ${logfile}
+                log "        Sending ${user}'s ${repo}..."                      2>&1 | tee -a ${logfile}
 
                 backup_repo ${user} ${repo} ${backup_servers[${i}]} ${backup_servers[$((${i}+1))]}
             done
-            echo "    ********************************************************" | tee -a ${logfile}
+            echo "    ********************************************************" 2>&1 | tee -a ${logfile}
         done
 
-        echo "${stars}"                                                         | tee -a ${logfile}
-        log "Done backing up ${user}'s repos..."                                | tee -a ${logfile}
+        echo "${stars}"                                                         2>&1 | tee -a ${logfile}
+        log "Done backing up ${user}'s repos..."                                2>&1 | tee -a ${logfile}
 
     done
 }
