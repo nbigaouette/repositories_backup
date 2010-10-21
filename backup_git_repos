@@ -233,6 +233,6 @@ send_log_to_servers() {
 
 log "Starting backing up git repos on `date`"                                   2>&1 | tee -a ${logfile}
 backup_all_repos
-send_log_to_servers
 log "Done backing up git repos on `date`"                                       2>&1 | tee -a ${logfile}
+send_log_to_servers
 
