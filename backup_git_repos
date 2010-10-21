@@ -97,6 +97,8 @@ setup_repo_for_pushing() {
     ssh_server="$3"
     remote_location="$4"
 
+    remote_name="backup_${ssh_server}"
+
     echo "${sharp}"
     log "Setting up ${local_user}'s ${local_repo} to push to ${remote_location} on ${ssh_server}..." \
                                                                                 2>&1 | tee -a ${logfile}
@@ -105,7 +107,7 @@ setup_repo_for_pushing() {
     remotes=(`git remote`)
     remote_present="false"
     for remote in ${remotes[@]}; do
-        if [[ "${remote}" == "backup_${ssh_server}" ]]; then
+        if [[ "${remote}" == "${remote_name}" ]]; then
             remote_present="true"
         fi
     done
