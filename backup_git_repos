@@ -15,9 +15,9 @@ repos_path="/git"
 me=nicolas
 
 backup_servers=(
-    "$me@soundwave"     "/home/nicolas/fichiers/backups/git_repos/"
+    "$me@soundwave"     "/home/nicolas/fichiers/backups/git_repos"
     "$me@unicron"       "/raid/nicolas/repositories/git"
-    "$me@grimlock"      "/home/nicolas/backups/git_repos/"
+    "$me@grimlock"      "/home/nicolas/backups/git_repos"
     "$me@sunstreaker"   "/home/nicolas/fichiers/backups/repositories/git"
 )
 
