@@ -16,6 +16,7 @@ me=nicolas
 
 backup_servers=(
     "$me@soundwave"     "/home/nicolas/fichiers/backups/git_repos"
+    "$me@cosmos"        "/home/nicolas/fichiers/backups/git_repos"
     "$me@unicron"       "/raid/nicolas/repositories/git"
     "$me@grimlock"      "/home/nicolas/backups/git_repos"
     "$me@sunstreaker"   "/home/nicolas/fichiers/backups/repositories/git"
