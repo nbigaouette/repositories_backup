@@ -21,7 +21,6 @@ backup_servers=(
     "$me@grimlock"      "/home/nicolas/backups/git_repos"
     "$me@sunstreaker"   "/home/nicolas/fichiers/backups/repositories/git"
 )
-#     "hpc1994@hpcvl"     "/home/hpc1994/backups/git_repos"
 
 logdir=/tmp/git_backup_logs
 logfile=${logdir}/git_backup_${now}.log
