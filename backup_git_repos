@@ -14,13 +14,14 @@ repos_path="/git"
 
 me=nicolas
 
+#     "$me@unicron"       "/raid/nicolas/repositories/git"
 backup_servers=(
     "$me@soundwave"     "/home/nicolas/fichiers/backups/git_repos"
     "$me@cosmos"        "/home/nicolas/fichiers/backups/git_repos"
-    "$me@unicron"       "/raid/nicolas/repositories/git"
     "$me@grimlock"      "/home/nicolas/backups/git_repos"
     "$me@sunstreaker"   "/home/nicolas/fichiers/backups/repositories/git"
 )
+#     "hpc1994@hpcvl"     "/home/hpc1994/backups/git_repos"
 
 logdir=/tmp/git_backup_logs
 logfile=${logdir}/git_backup_${now}.log
@@ -83,10 +84,13 @@ create_remote_repo() {
                                                                                 2>&1 | tee -a ${logfile}
 
     cmd="mkdir -p ${remote_repo} && cd ${remote_repo} && if [[ ! -e 'config' ]]; then git --bare init; fi"
-    #echo "${s}${s}${s}ssh ${ssh_server} $cmd"                                   2>&1 | tee -a ${logfile}
-    ssh ${ssh_server} ${cmd}
+    ssh_cmd="${sudo/USER/${me}} ssh ${ssh_server} ${cmd}"
+    #echo "${s}${s}${s}${ssh_cmd}"                                               2>&1 | tee -a ${logfile}
+    ${ssh_cmd}
 }
 
+prev_permissions_heads=""
+prev_permissions_tags=""
 setup_repo_for_pushing() {
     if [[ -z "$1" || -z "$2" || -z "$3" || -z "$4" ]]; then
         echo "Usage: setup_repo_for_pushing <local_user> <local_repo> <ssh_server> <remote_location>"
@@ -106,27 +110,36 @@ setup_repo_for_pushing() {
     remotes=(`${git} remote`)
     remote_present="false"
     for remote in ${remotes[@]}; do
-
-        # Prune the remote's branches.
-        ${sudo/USER/${me}} ${git} remote prune ${remote}                        2>&1 | tee -a ${logfile}
+#         # Prune the remote's branches.
+#         echo "Pruning..."
+#         ${sudo/USER/${local_user}} ${git} remote prune ${remote}                        2>&1 | tee -a ${logfile}
 
         if [[ "${remote}" == "${remote_name}" ]]; then
             remote_present="true"
         fi
     done
+
+    # Make sure $me can touch refs/heads/master.lock
+    # Store previous permission to restore later
+    prev_permissions_heads=`\ls refs/heads -dl | awk '{print ""$1""}'`
+    chmod o+w refs/heads
+    chmod g+w refs/heads
+    prev_permissions_tags=`\ls refs/tags -dl | awk '{print ""$1""}'`
+    chmod o+w refs/tags
+    chmod g+w refs/tags
+    chown ${me}:users -R refs/remotes
+
     if [[ "${remote_present}" == "false" ]]; then
         # Add remote
-        ${sudo/USER/${me}} ${git} remote add ${remote_name} ssh://${ssh_server}${remote_location}/${local_user}/${local_repo} \
-                                                                                2>&1 | tee -a ${logfile}
-        ${sudo/USER/${me}} ${git} config remote.${remote_name}.mirror true \
-                                                                                2>&1 | tee -a ${logfile}
+        ${sudo/USER/${local_user}} ${git} remote add --mirror ${remote_name} ssh://${ssh_server}${remote_location}/${local_user}/${local_repo} \
+                                                                               2>&1 | tee -a ${logfile}
     else
         # Make sure the url of the remote is set correctly
-        ${sudo/USER/${me}} ${git} remote set-url        ${remote_name} ssh://${ssh_server}${remote_location}/${local_user}/${local_repo} \
-                                                                                2>&1 | tee -a ${logfile}
-        ${sudo/USER/${me}} ${git} remote set-url --push ${remote_name} ssh://${ssh_server}${remote_location}/${local_user}/${local_repo} \
+        ${sudo/USER/${local_user}} ${git} remote set-url        ${remote_name} ssh://${ssh_server}${remote_location}/${local_user}/${local_repo} \
                                                                                 2>&1 | tee -a ${logfile}
     fi
+    ${sudo/USER/${local_user}} ${git} remote set-url --push ${remote_name} ssh://${ssh_server}${remote_location}/${local_user}/${local_repo} \
+                                                                            2>&1 | tee -a ${logfile}
     cd - > /dev/null
 }
 
@@ -161,8 +174,8 @@ push_to_backup_server() {
                                                                                 2>&1 | tee -a ${logfile}
 
     cd ${repos_path}/${local_user}/${local_repo}
-    cmd="${git} push backup_${ssh_server}"
-    echo "${s}${s}${s}$cmd"                                                     2>&1 | tee -a ${logfile}
+    cmd="${sudo/USER/${me}} ${git} push backup_${ssh_server}"
+    #echo "${s}${s}${s}$cmd"                                                     2>&1 | tee -a ${logfile}
     $cmd                                                                        2>&1 | tee -a ${logfile}
 
     # No need to push branches. Setting up a mirror in setup_repo_for_pushing() is enough
@@ -171,6 +184,30 @@ push_to_backup_server() {
     #for branch in ${branches[*]}; do
     #    push_branch ${branch} backup_${ssh_server}
     #done
+
+    # Restore permission on "refs/heads" folder
+    if [[ "${prev_permissions_heads:5:1}" == "-" ]]; then
+        chmod g-w refs/heads
+    else
+        chmod g+w refs/heads
+    fi
+    if [[ "${prev_permissions_heads:8:1}" == "-" ]]; then
+        chmod o-w refs/heads
+    else
+        chmod o+w refs/heads
+    fi
+
+    # Restore permission on "refs/tags" folder
+    if [[ "${prev_permissions_tags:5:1}" == "-" ]]; then
+        chmod g-w refs/heads
+    else
+        chmod g+w refs/heads
+    fi
+    if [[ "${prev_permissions_tags:8:1}" == "-" ]]; then
+        chmod o-w refs/heads
+    else
+        chmod o+w refs/heads
+    fi
 
     cd - > /dev/null
 }
@@ -188,7 +225,6 @@ backup_repo() {
     create_remote_repo     ${local_user} ${local_repo} ${ssh_server} ${remote_location}
     setup_repo_for_pushing ${local_user} ${local_repo} ${ssh_server} ${remote_location}
     push_to_backup_server  ${local_user} ${local_repo} ${ssh_server}
-
 }
 
 backup_all_repos() {
@@ -220,8 +256,10 @@ backup_all_repos() {
 send_log_to_servers() {
     log "Sending logs..."
     for (( i=0; i<${#backup_servers[@]}; i=i+2 )); do
-        ssh ${backup_servers[${i}]} "mkdir -p ${backup_servers[$((${i}+1))]}/logs/"
-        scp ${logfile} ${backup_servers[${i}]}:${backup_servers[$((${i}+1))]}/logs/`basename ${logfile}`
+        #ssh -F /home/${me}/.ssh/config ${backup_servers[${i}]} "mkdir -p ${backup_servers[$((${i}+1))]}/logs/"
+        #scp ${logfile} ${backup_servers[${i}]}:${backup_servers[$((${i}+1))]}/logs/`basename ${logfile}`
+        ${sudo/USER/${me}} ssh ${backup_servers[${i}]} "mkdir -p ${backup_servers[$((${i}+1))]}/logs/"
+        ${sudo/USER/${me}} scp ${logfile} ${backup_servers[${i}]}:${backup_servers[$((${i}+1))]}/logs/`basename ${logfile}`
     done
 }
 
