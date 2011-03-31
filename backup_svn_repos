@@ -54,7 +54,7 @@ servers_hosts=(
     "$me@grimlock:/home/nicolas/backups/svn_repos/"
     "$me@sunstreaker:/home/nicolas/fichiers/backups/repositories/svn"
 #     "$me@model:/home/nicolas/fichiers/backup/svn/"
-    "bigaouette@cluster:/home/bigaouette/fichiers/backup/svn/"
+#    "bigaouette@cluster:/home/bigaouette/fichiers/backup/svn/"
 )
 
 if [ `printf '%c' $0` == "/" ]; then
