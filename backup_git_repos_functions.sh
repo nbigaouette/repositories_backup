@@ -281,54 +281,6 @@ loop_over_all_repos_and_remotes()
     done
 }
 
-pack_all_repos() {
-
-    unset users
-    users=`list_users`
-    for user in ${users[@]}; do
-        echo "${stars}"                                                         2>&1 | tee -a ${logfile}
-        log "Packing up ${user}'s repos..."                                     2>&1 | tee -a ${logfile}
-
-        unset repos
-        repos=`list_user_repos ${user}`
-        for repo in ${repos[@]}; do
-            log "${s}${s}Packing up ${user}'s ${repo}..." \
-                                                                                2>&1 | tee -a ${logfile}
-            repack_and_gc ${user} ${repo}
-            sleep 2
-        done
-
-        log "Done packing ${user}'s repos..."                                   2>&1 | tee -a ${logfile}
-
-    done
-}
-
-backup_all_repos() {
-
-    unset users
-    users=`list_users`
-    for user in ${users[@]}; do
-        echo "${stars}"                                                         2>&1 | tee -a ${logfile}
-        log "Backing up ${user}'s repos..."                                     2>&1 | tee -a ${logfile}
-
-        unset repos
-        repos=`list_user_repos ${user}`
-        for (( i=0; i<${#backup_servers[@]}; i=i+2 )); do
-            log  "${s}Sending ${user}'s repos to ${backup_servers[${i}]}..."    2>&1 | tee -a ${logfile}
-
-            for repo in ${repos[@]}; do
-                log "${s}${s}Sending ${user}'s ${repo} to ${backup_servers[${i}]}..." \
-                                                                                2>&1 | tee -a ${logfile}
-
-                backup_repo ${user} ${repo} ${backup_servers[${i}]} ${backup_servers[$((${i}+1))]}
-            done
-        done
-
-        log "Done backing up ${user}'s repos..."                                2>&1 | tee -a ${logfile}
-
-    done
-}
-
 send_log_to_servers()
 {
     log "Sending logs..."
