@@ -250,8 +250,10 @@ fix_permissions()
     cmd="find . -type d -execdir chmod g+s {} ;"
     # Change ownership
     $cmd                                                                        2>&1 | tee -a ${logfile}
-    cmd="chown -R ${local_user}:${group} *"
-    $cmd                                                                        2>&1 | tee -a ${logfile}
+    if [[ "${group}" != "" ]]; then
+        cmd="chown -R ${local_user}:${group} *"
+        $cmd                                                                    2>&1 | tee -a ${logfile}
+    fi
     # Repair permissions
     cmd="chmod -R g+r *"
     $cmd                                                                        2>&1 | tee -a ${logfile}
