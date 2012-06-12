@@ -20,9 +20,9 @@ fi
 prev_permissions_heads=""
 prev_permissions_tags=""
 
-cmd_backup_all_repos="backup_repo \${user} \${repo} \${backup_servers[\${i}]} \${backup_servers[\$((\${i}+1))]}"
-cmd_pack_all_repos="repack_and_gc \${user} \${repo}"
-cmd_fix_permissions="fix_permissions \${user} \${repo}"
+cmd_backup_all_repos="backup_repo \"\${user}\" \"\${repo}\" \"\${backup_servers[\${i}]}\" \"\${backup_servers[\$((\${i}+1))]}\""
+cmd_pack_all_repos="repack_and_gc \"\${user}\" \"\${repo}\""
+cmd_fix_permissions="fix_permissions \"\${user}\" \"\${repo}\""
 
 log()
 {
