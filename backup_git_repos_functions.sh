@@ -245,9 +245,9 @@ repack_and_gc()
     local_repo="$2"
 
     cd ${repos_path}/${local_user}/${local_repo}
-    cmd="${sudo/USER/${me}} ${git} repack -afd --window-memory=100M"
+    cmd="${sudo/USER/${local_user}} ${git} repack -afd --window-memory=100M"
     $cmd                                                                        2>&1 | tee -a ${logfile}
-    cmd="${sudo/USER/${me}} ${git} gc"
+    cmd="${sudo/USER/${local_user}} ${git} gc"
     $cmd                                                                        2>&1 | tee -a ${logfile}
     cd -
 }
