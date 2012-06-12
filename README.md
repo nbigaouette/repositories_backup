@@ -11,12 +11,13 @@ It will list directories in $repos_path ("/git" by default, see git_repos.conf)
 and will treat these entries as the different users. User directories can
 then host as many different git repositories. For example:
 
-/git/user1/repo1.git
-/git/user2/repo1.git
-/git/user2/repo2.git
-/git/user3/project/repo1.git
-/git/user3/project/repo2.git
-/git/user3/repo3.git
+    /git/user1/repo1.git
+    /git/user2/repo1.git
+    /git/user2/repo2.git
+    /git/user3/project/repo1.git
+    /git/user3/project/repo2.git
+    /git/user3/repo3.git
+
 etc.
 
 
