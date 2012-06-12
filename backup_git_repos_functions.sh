@@ -205,6 +205,36 @@ push_to_backup_server()
     cd - > /dev/null
 }
 
+fix_permissions()
+{
+    if [[ -z "$1" || -z "$2" ]]; then
+        echo "Usage: fix_permissions <local_user> <local_repo>"
+        return
+    fi
+    local_user="$1"
+    local_repo="$2"
+
+    if [[ "$UID" != "0" ]]; then
+        log "fix_permissions() will probably work better if run as root!"
+        exit
+    fi
+
+    # http://stackoverflow.com/questions/4832346/how-to-use-group-file-permissions-correctly-on-a-git-repository
+    pushd ${repos_path}/${local_user}/${local_repo} > /dev/null
+    # Make the repository shared
+    cmd="${git} config core.sharedRepository group"
+    $cmd                                                                        2>&1 | tee -a ${logfile}
+    # Fix the sticky bit
+    cmd="find . -type d -execdir chmod g+s {} ;"
+    $cmd                                                                        2>&1 | tee -a ${logfile}
+    # Change ownership
+    cmd="chgrp -R ${group} *"
+    # Repair permissions
+    cmd="chmod -R g+r *"
+    $cmd                                                                        2>&1 | tee -a ${logfile}
+    popd > /dev/null
+}
+
 repack_and_gc()
 {
     if [[ -z "$1" || -z "$2" ]]; then
