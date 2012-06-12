@@ -324,11 +324,9 @@ loop_over_all_repos()
             log "${s}${s}${action_string} ${user}'s ${repo}..." \
                                                                                 2>&1 | tee -a ${logfile}
             eval `echo "$cmd"`
-            sleep 1
         done
 
         log "Done ${action_string} ${user}'s repos..."                                   2>&1 | tee -a ${logfile}
-
     done
 }
 
@@ -355,7 +353,6 @@ loop_over_all_repos_and_remotes()
                 log "${s}${s}${action_string} ${user}'s ${repo}..." \
                                                                                     2>&1 | tee -a ${logfile}
                 eval `echo "$cmd"`
-                sleep 1
             done
         done
 
