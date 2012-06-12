@@ -54,12 +54,9 @@ list_user_repos()
     local_user="$1"
 
     pushd "${repos_path}/${local_user}" > /dev/null
-    #repos=(`/bin/ls -d *`)
-#     repos=(`find . -maxdepth 1 -mindepth 1 -type d | sed "s|./||g"`)
     repos=(`find . -type d -name "*.git" | sed "s|^./||g"`)
 
     popd > /dev/null
-    #echo "repos (${#repos[@]}) = ${repos[@]}"
     echo ${repos[@]}
 }
 
