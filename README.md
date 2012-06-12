@@ -10,6 +10,7 @@ The script will go over all git repositories it finds and backup them (mirror).
 It will list directories in $repos_path ("/git" by default, see git_repos.conf)
 and will treat these entries as the different users. User directories can
 then host as many different git repositories. For example:
+
 /git/user1/repo1.git
 /git/user2/repo1.git
 /git/user2/repo2.git
@@ -41,14 +42,21 @@ Usage
 Execute, as root, the different scripts.
 
 To fix the permissions:
+
     # ./git_fix_permissions.sh
+
 Note that the permissions are set for shared repositories!
 
+
 To repack and garbage collect the repositories:
+
     # ./git_repack_and_gc.sh
+
 Note that for big repositories, this can be slow.
 
+
 To run the actual backup:
+
     # ./backup_git_repos.sh
 
 
