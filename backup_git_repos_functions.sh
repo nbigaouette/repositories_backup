@@ -292,7 +292,7 @@ loop_over_all_repos()
             sleep 1
         done
 
-        log "Done packing ${user}'s repos..."                                   2>&1 | tee -a ${logfile}
+        log "Done ${action_string} ${user}'s repos..."                                   2>&1 | tee -a ${logfile}
 
     done
 }
