@@ -5,6 +5,7 @@
 # June 2012
 # v0.2
 
+cmd_backup_all_repos="backup_repo \${user} \${repo} \${backup_servers[\${i}]} \${backup_servers[\$((\${i}+1))]}"
 
 log() {
     echo -e "${c}${@}${n}"
