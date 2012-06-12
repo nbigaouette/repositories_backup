@@ -267,6 +267,11 @@ repack_and_gc()
     local local_repo="$2"
 
     pushd "${repos_path}/${local_user}/${local_repo}" > /dev/null
+    if [[ "$UID" != "0" ]]; then
+        log "repack_and_gc() will probably work better if run as root!"
+        exit
+    fi
+
     local cmd
 
     if [[ "$?" != "0" ]]; then
