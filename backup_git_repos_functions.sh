@@ -7,6 +7,8 @@
 
 now=`date +%Y%m%d_%Hh%M`
 pwd=`pwd`
+logfile=${logdir}/git_backup_${now}.log
+
 
 stars="*********************************************************"
 c="\e[36;1m"
