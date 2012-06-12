@@ -248,9 +248,10 @@ fix_permissions()
     $cmd                                                                        2>&1 | tee -a ${logfile}
     # Fix the sticky bit
     cmd="find . -type d -execdir chmod g+s {} ;"
-    $cmd                                                                        2>&1 | tee -a ${logfile}
     # Change ownership
-    cmd="chgrp -R ${group} *"
+    $cmd                                                                        2>&1 | tee -a ${logfile}
+    cmd="chown -R ${local_user}:${group} *"
+    $cmd                                                                        2>&1 | tee -a ${logfile}
     # Repair permissions
     cmd="chmod -R g+r *"
     $cmd                                                                        2>&1 | tee -a ${logfile}
