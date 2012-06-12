@@ -104,6 +104,10 @@ setup_repo_for_pushing()
                                                                                 2>&1 | tee -a ${logfile}
 
     pushd "${repos_path}/${local_user}/${local_repo}" > /dev/null
+    if [[ "$?" != "0" ]]; then
+        warning "Can't go into directory \"${repos_path}/${local_user}/${local_repo}\" Can't setup repo for pushing!"
+        return
+    fi
     local remotes=(`${git} remote`)
     local remote_present="false"
     for remote in ${remotes[@]}; do
@@ -175,6 +179,10 @@ push_to_backup_server()
                                                                                 2>&1 | tee -a ${logfile}
 
     pushd "${repos_path}/${local_user}/${local_repo}" > /dev/null
+    if [[ "$?" != "0" ]]; then
+        warning "Can't go into directory \"${repos_path}/${local_user}/${local_repo}\" Can't push to backup server ($ssh_server)!"
+        return
+    fi
     local cmd="${sudo/USER/${me}} ${git} push backup_${ssh_server}"
     #echo "${s}${s}${s}$cmd"                                                     2>&1 | tee -a ${logfile}
     $cmd                                                                        2>&1 | tee -a ${logfile}
@@ -231,6 +239,10 @@ fix_permissions()
 
     # http://stackoverflow.com/questions/4832346/how-to-use-group-file-permissions-correctly-on-a-git-repository
     pushd "${repos_path}/${local_user}/${local_repo}" > /dev/null
+    if [[ "$?" != "0" ]]; then
+        warning "Can't go into directory \"${repos_path}/${local_user}/${local_repo}\" Not fixing permissions!"
+        return
+    fi
     # Make the repository shared
     cmd="${git} config core.sharedRepository group"
     $cmd                                                                        2>&1 | tee -a ${logfile}
@@ -256,6 +268,11 @@ repack_and_gc()
 
     pushd "${repos_path}/${local_user}/${local_repo}" > /dev/null
     local cmd
+
+    if [[ "$?" != "0" ]]; then
+        warning "Can't go into directory \"${repos_path}/${local_user}/${local_repo}\" Can't repack!"
+        return
+    fi
     cmd="${sudo/USER/${local_user}} ${git} repack -afd --window-memory=100M"
     $cmd                                                                        2>&1 | tee -a ${logfile}
     cmd="${sudo/USER/${local_user}} ${git} gc"
