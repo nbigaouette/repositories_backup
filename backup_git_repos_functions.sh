@@ -54,10 +54,15 @@ list_user_repos()
     local local_user="$1"
 
     pushd "${repos_path}/${local_user}" > /dev/null
+
+    # WARNING: "repos" is global. Unset it first.
+    unset repos
+    old_IFS=$IFS
+    IFS="$(printf '\n\t')"
     repos=(`find . -type d -name "*.git" | sed "s|^./||g"`)
+    IFS=${old_IFS}
 
     popd > /dev/null
-    echo ${repos[@]}
 }
 
 create_remote_repo()
@@ -290,8 +295,9 @@ loop_over_all_repos()
         log "${action_string} ${user}'s repos..."                               2>&1 | tee -a ${logfile}
 
         unset repos
-        local repos=`list_user_repos ${user}`
-        for repo in ${repos[@]}; do
+        list_user_repos ${user}
+        for ((i = 0 ; i < ${#repos[@]} ; i++)); do
+            repo="${repos[i]}"
             log "${s}${s}${action_string} ${user}'s ${repo}..." \
                                                                                 2>&1 | tee -a ${logfile}
             eval `echo "$cmd"`
@@ -318,10 +324,11 @@ loop_over_all_repos_and_remotes()
         log "${action_string} ${user}'s repos..."                               2>&1 | tee -a ${logfile}
 
         unset repos
-        local repos=`list_user_repos ${user}`
+        list_user_repos ${user}
         for (( i=0; i<${#backup_servers[@]}; i=i+2 )); do
             log  "${s}${action_string} ${user}'s repos to ${backup_servers[${i}]}..."    2>&1 | tee -a ${logfile}
-            for repo in ${repos[@]}; do
+            for ((i = 0 ; i < ${#repos[@]} ; i++)); do
+                repo="${repos[i]}"
                 log "${s}${s}${action_string} ${user}'s ${repo}..." \
                                                                                     2>&1 | tee -a ${logfile}
                 eval `echo "$cmd"`
