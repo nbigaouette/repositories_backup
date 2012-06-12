@@ -297,7 +297,6 @@ backup_repo()
     local ssh_server="$3"
     local remote_location="$4"
 
-    #repack_and_gc          ${local_user} ${local_repo}
     create_remote_repo     ${local_user} ${local_repo} ${ssh_server} ${remote_location}
     setup_repo_for_pushing ${local_user} ${local_repo} ${ssh_server} ${remote_location}
     push_to_backup_server  ${local_user} ${local_repo} ${ssh_server}
