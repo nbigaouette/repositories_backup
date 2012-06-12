@@ -30,6 +30,11 @@ log()
     echo -e "${c}${@}${n}"
 }
 
+warning()
+{
+    echo -e "${r}${@}${n}"
+}
+
 list_users()
 {
     unset users
