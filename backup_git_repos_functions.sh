@@ -39,10 +39,10 @@ list_users()
 {
     unset users
     local users
-    cd ${repos_path}
+    pushd "${repos_path}" > /dev/null
     users=(`/bin/ls -d *`)
     echo ${users[@]}
-    cd - > /dev/null
+    popd > /dev/null
 }
 
 list_user_repos()
@@ -53,12 +53,12 @@ list_user_repos()
     fi
     local_user="$1"
 
-    cd ${repos_path}/${local_user}
+    pushd "${repos_path}/${local_user}" > /dev/null
     #repos=(`/bin/ls -d *`)
 #     repos=(`find . -maxdepth 1 -mindepth 1 -type d | sed "s|./||g"`)
     repos=(`find . -type d -name "*.git" | sed "s|^./||g"`)
-    cd - > /dev/null
 
+    popd > /dev/null
     #echo "repos (${#repos[@]}) = ${repos[@]}"
     echo ${repos[@]}
 }
@@ -101,7 +101,7 @@ setup_repo_for_pushing()
     log "${s}${s}${s}Setting up ${local_user}'s ${local_repo} to push to ${remote_location} on ${ssh_server}..." \
                                                                                 2>&1 | tee -a ${logfile}
 
-    cd ${repos_path}/${local_user}/${local_repo}
+    pushd "${repos_path}/${local_user}/${local_repo}" > /dev/null
     remotes=(`${git} remote`)
     remote_present="false"
     for remote in ${remotes[@]}; do
@@ -136,7 +136,7 @@ setup_repo_for_pushing()
     fi
     ${sudo/USER/${local_user}} ${git} remote set-url --push ${remote_name} ssh://${ssh_server}${remote_location}/${local_user}/${local_repo} \
                                                                             2>&1 | tee -a ${logfile}
-    cd - > /dev/null
+    popd > /dev/null
 }
 
 list_local_branches()
@@ -172,7 +172,7 @@ push_to_backup_server()
     log "${s}${s}${s}Pushing ${local_user}'s ${local_repo} to push to ${ssh_server}..." \
                                                                                 2>&1 | tee -a ${logfile}
 
-    cd ${repos_path}/${local_user}/${local_repo}
+    pushd "${repos_path}/${local_user}/${local_repo}" > /dev/null
     cmd="${sudo/USER/${me}} ${git} push backup_${ssh_server}"
     #echo "${s}${s}${s}$cmd"                                                     2>&1 | tee -a ${logfile}
     $cmd                                                                        2>&1 | tee -a ${logfile}
@@ -208,7 +208,7 @@ push_to_backup_server()
         chmod o+w refs/heads
     fi
 
-    cd - > /dev/null
+    popd > /dev/null
 }
 
 fix_permissions()
@@ -226,7 +226,7 @@ fix_permissions()
     fi
 
     # http://stackoverflow.com/questions/4832346/how-to-use-group-file-permissions-correctly-on-a-git-repository
-    pushd ${repos_path}/${local_user}/${local_repo} > /dev/null
+    pushd "${repos_path}/${local_user}/${local_repo}" > /dev/null
     # Make the repository shared
     cmd="${git} config core.sharedRepository group"
     $cmd                                                                        2>&1 | tee -a ${logfile}
@@ -250,12 +250,12 @@ repack_and_gc()
     local_user="$1"
     local_repo="$2"
 
-    cd ${repos_path}/${local_user}/${local_repo}
+    pushd "${repos_path}/${local_user}/${local_repo}" > /dev/null
     cmd="${sudo/USER/${local_user}} ${git} repack -afd --window-memory=100M"
     $cmd                                                                        2>&1 | tee -a ${logfile}
     cmd="${sudo/USER/${local_user}} ${git} gc"
     $cmd                                                                        2>&1 | tee -a ${logfile}
-    cd -
+    popd > /dev/null
 }
 
 backup_repo()
