@@ -210,6 +210,65 @@ backup_repo() {
     push_to_backup_server  ${local_user} ${local_repo} ${ssh_server}
 }
 
+loop_over_all_repos()
+{
+    if [[ -z "$1" || -z "$2" ]]; then
+        echo "Usage: loop_over_all_repos <action string> <command>"
+        return
+    fi
+    local action_string="$1"
+    local cmd="$2"
+
+    local users=`list_users`
+    for user in ${users[@]}; do
+        echo "${stars}"                                                         2>&1 | tee -a ${logfile}
+        log "${action_string} ${user}'s repos..."                               2>&1 | tee -a ${logfile}
+
+        unset repos
+        local repos=`list_user_repos ${user}`
+        for repo in ${repos[@]}; do
+            log "${s}${s}${action_string} ${user}'s ${repo}..." \
+                                                                                2>&1 | tee -a ${logfile}
+            eval `echo "$cmd"`
+            sleep 1
+        done
+
+        log "Done packing ${user}'s repos..."                                   2>&1 | tee -a ${logfile}
+
+    done
+}
+
+loop_over_all_repos_and_remotes()
+{
+    if [[ -z "$1" || -z "$2" ]]; then
+        echo "Usage: loop_over_all_repos <action string> <command>"
+        return
+    fi
+    local action_string="$1"
+    local cmd="$2"
+
+    local users=`list_users`
+    for user in ${users[@]}; do
+        echo "${stars}"                                                         2>&1 | tee -a ${logfile}
+        log "${action_string} ${user}'s repos..."                               2>&1 | tee -a ${logfile}
+
+        unset repos
+        local repos=`list_user_repos ${user}`
+        for (( i=0; i<${#backup_servers[@]}; i=i+2 )); do
+            log  "${s}${action_string} ${user}'s repos to ${backup_servers[${i}]}..."    2>&1 | tee -a ${logfile}
+            for repo in ${repos[@]}; do
+                log "${s}${s}${action_string} ${user}'s ${repo}..." \
+                                                                                    2>&1 | tee -a ${logfile}
+                eval `echo "$cmd"`
+                sleep 1
+            done
+        done
+
+        log "Done packing ${user}'s repos..."                                   2>&1 | tee -a ${logfile}
+
+    done
+}
+
 pack_all_repos() {
 
     unset users
