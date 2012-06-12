@@ -40,7 +40,7 @@ list_users()
     unset users
     local users
     pushd "${repos_path}" > /dev/null
-    users=(`/bin/ls -d *`)
+    local users=(`/bin/ls -d *`)
     echo ${users[@]}
     popd > /dev/null
 }
@@ -51,7 +51,7 @@ list_user_repos()
         echo "Usage: list_user_repos <user>"
         return
     fi
-    local_user="$1"
+    local local_user="$1"
 
     pushd "${repos_path}/${local_user}" > /dev/null
     repos=(`find . -type d -name "*.git" | sed "s|^./||g"`)
@@ -66,18 +66,18 @@ create_remote_repo()
         echo "Usage: create_remote_repo <local_user> <local_repo> <ssh_server> <remote_location>"
         return
     fi
-    local_user="$1"
-    local_repo="$2"
-    ssh_server="$3"
-    remote_location="$4"
+    local local_user="$1"
+    local local_repo="$2"
+    local ssh_server="$3"
+    local remote_location="$4"
 
-    remote_repo="${remote_location}/${local_user}/${local_repo}"
+    local remote_repo="${remote_location}/${local_user}/${local_repo}"
 
     log "${s}${s}${s}Making sure a bare git repo exist at ${remote_repo} on ${ssh_server}..." \
                                                                                 2>&1 | tee -a ${logfile}
 
-    cmd="mkdir -p ${remote_repo} && cd ${remote_repo} && if [[ ! -e 'config' ]]; then git --bare init; fi"
-    ssh_cmd="${sudo/USER/${me}} ssh ${ssh_server} ${cmd}"
+    local cmd="mkdir -p ${remote_repo} && cd \"${remote_repo}\" && if [[ ! -e 'config' ]]; then git --bare init; fi"
+    local ssh_cmd="${sudo/USER/${me}} ssh ${ssh_server} ${cmd}"
     #echo "${s}${s}${s}${ssh_cmd}"                                               2>&1 | tee -a ${logfile}
     ${ssh_cmd}
 }
@@ -88,19 +88,19 @@ setup_repo_for_pushing()
         echo "Usage: setup_repo_for_pushing <local_user> <local_repo> <ssh_server> <remote_location>"
         return
     fi
-    local_user="$1"
-    local_repo="$2"
-    ssh_server="$3"
-    remote_location="$4"
+    local local_user="$1"
+    local local_repo="$2"
+    local ssh_server="$3"
+    local remote_location="$4"
 
-    remote_name="backup_${ssh_server}"
+    local remote_name="backup_${ssh_server}"
 
     log "${s}${s}${s}Setting up ${local_user}'s ${local_repo} to push to ${remote_location} on ${ssh_server}..." \
                                                                                 2>&1 | tee -a ${logfile}
 
     pushd "${repos_path}/${local_user}/${local_repo}" > /dev/null
-    remotes=(`${git} remote`)
-    remote_present="false"
+    local remotes=(`${git} remote`)
+    local remote_present="false"
     for remote in ${remotes[@]}; do
 #         # Prune the remote's branches.
 #         echo "Pruning..."
@@ -113,10 +113,10 @@ setup_repo_for_pushing()
 
     # Make sure $me can touch refs/heads/master.lock
     # Store previous permission to restore later
-    prev_permissions_heads=`\ls refs/heads -dl | awk '{print ""$1""}'`
+    local prev_permissions_heads=`\ls refs/heads -dl | awk '{print ""$1""}'`
     chmod o+w refs/heads
     chmod g+w refs/heads
-    prev_permissions_tags=`\ls refs/tags -dl | awk '{print ""$1""}'`
+    local prev_permissions_tags=`\ls refs/tags -dl | awk '{print ""$1""}'`
     chmod o+w refs/tags
     chmod g+w refs/tags
     chown ${me}:users -R refs/remotes
@@ -143,11 +143,11 @@ list_local_branches()
 
 push_branch()
 {
-    branch="${1}"
-    remote="${2}"
-    cmd1="${git} push ${remote} ${branch}:refs/heads/${branch}"
-    cmd2="${git} config branch.${branch}.remote ${remote}"
-    cmd3="${git} config branch.${branch}.merge refs/heads/${branch}"
+    local branch="${1}"
+    local remote="${2}"
+    local cmd1="${git} push ${remote} ${branch}:refs/heads/${branch}"
+    local cmd2="${git} config branch.${branch}.remote ${remote}"
+    local cmd3="${git} config branch.${branch}.merge refs/heads/${branch}"
     echo $cmd1                                                                  2>&1 | tee -a ${logfile}
     $cmd1                                                                       2>&1 | tee -a ${logfile}
     echo $cmd1                                                                  2>&1 | tee -a ${logfile}
@@ -162,15 +162,15 @@ push_to_backup_server()
         echo "Usage: push_to_backup_server <local_user> <local_repo> <ssh_server>"
         return
     fi
-    local_user="$1"
-    local_repo="$2"
-    ssh_server="$3"
+    local local_user="$1"
+    local local_repo="$2"
+    local ssh_server="$3"
 
     log "${s}${s}${s}Pushing ${local_user}'s ${local_repo} to push to ${ssh_server}..." \
                                                                                 2>&1 | tee -a ${logfile}
 
     pushd "${repos_path}/${local_user}/${local_repo}" > /dev/null
-    cmd="${sudo/USER/${me}} ${git} push backup_${ssh_server}"
+    local cmd="${sudo/USER/${me}} ${git} push backup_${ssh_server}"
     #echo "${s}${s}${s}$cmd"                                                     2>&1 | tee -a ${logfile}
     $cmd                                                                        2>&1 | tee -a ${logfile}
 
@@ -214,13 +214,15 @@ fix_permissions()
         echo "Usage: fix_permissions <local_user> <local_repo>"
         return
     fi
-    local_user="$1"
-    local_repo="$2"
+    local local_user="$1"
+    local local_repo="$2"
 
     if [[ "$UID" != "0" ]]; then
         log "fix_permissions() will probably work better if run as root!"
         exit
     fi
+
+    local cmd
 
     # http://stackoverflow.com/questions/4832346/how-to-use-group-file-permissions-correctly-on-a-git-repository
     pushd "${repos_path}/${local_user}/${local_repo}" > /dev/null
@@ -244,10 +246,11 @@ repack_and_gc()
         echo "Usage: repack_and_gc <local_user> <local_repo>"
         return
     fi
-    local_user="$1"
-    local_repo="$2"
+    local local_user="$1"
+    local local_repo="$2"
 
     pushd "${repos_path}/${local_user}/${local_repo}" > /dev/null
+    local cmd
     cmd="${sudo/USER/${local_user}} ${git} repack -afd --window-memory=100M"
     $cmd                                                                        2>&1 | tee -a ${logfile}
     cmd="${sudo/USER/${local_user}} ${git} gc"
@@ -261,10 +264,10 @@ backup_repo()
         echo "Usage: backup_repo <local_user> <local_repo> <ssh_server> <remote_location>"
         return
     fi
-    local_user="$1"
-    local_repo="$2"
-    ssh_server="$3"
-    remote_location="$4"
+    local local_user="$1"
+    local local_repo="$2"
+    local ssh_server="$3"
+    local remote_location="$4"
 
     #repack_and_gc          ${local_user} ${local_repo}
     create_remote_repo     ${local_user} ${local_repo} ${ssh_server} ${remote_location}
