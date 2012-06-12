@@ -5,6 +5,21 @@
 # June 2012
 # v0.2
 
+stars="*********************************************************"
+c="\e[36;1m"
+n="\e[0m"
+
+s="  "
+sudo=""
+if [[ "$UID" == "0" ]]; then
+    sudo="sudo -u USER"
+fi
+
+[[ ! -e "${logdir}" ]] && mkdir -p ${logdir}
+
+prev_permissions_heads=""
+prev_permissions_tags=""
+
 cmd_backup_all_repos="backup_repo \${user} \${repo} \${backup_servers[\${i}]} \${backup_servers[\$((\${i}+1))]}"
 
 log()
