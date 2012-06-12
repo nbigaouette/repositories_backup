@@ -7,11 +7,13 @@
 
 cmd_backup_all_repos="backup_repo \${user} \${repo} \${backup_servers[\${i}]} \${backup_servers[\$((\${i}+1))]}"
 
-log() {
+log()
+{
     echo -e "${c}${@}${n}"
 }
 
-list_users() {
+list_users()
+{
     unset users
     local users
     cd ${repos_path}
@@ -20,7 +22,8 @@ list_users() {
     cd - > /dev/null
 }
 
-list_user_repos() {
+list_user_repos()
+{
     if [[ -z "$1" ]]; then
         echo "Usage: list_user_repos <user>"
         return
@@ -37,7 +40,8 @@ list_user_repos() {
     echo ${repos[@]}
 }
 
-create_remote_repo() {
+create_remote_repo()
+{
     if [[ -z "$1" || -z "$2" || -z "$3" || -z "$4" ]]; then
         echo "Usage: create_remote_repo <local_user> <local_repo> <ssh_server> <remote_location>"
         return
@@ -57,7 +61,9 @@ create_remote_repo() {
     #echo "${s}${s}${s}${ssh_cmd}"                                               2>&1 | tee -a ${logfile}
     ${ssh_cmd}
 }
-setup_repo_for_pushing() {
+
+setup_repo_for_pushing()
+{
     if [[ -z "$1" || -z "$2" || -z "$3" || -z "$4" ]]; then
         echo "Usage: setup_repo_for_pushing <local_user> <local_repo> <ssh_server> <remote_location>"
         return
@@ -110,11 +116,13 @@ setup_repo_for_pushing() {
     cd - > /dev/null
 }
 
-list_local_branches() {
+list_local_branches()
+{
     ${git} branch | grep -v master | sed "s|\* ||g"
 }
 
-push_branch() {
+push_branch()
+{
     branch="${1}"
     remote="${2}"
     cmd1="${git} push ${remote} ${branch}:refs/heads/${branch}"
@@ -128,7 +136,8 @@ push_branch() {
     $cmd3                                                                       2>&1 | tee -a ${logfile}
 }
 
-push_to_backup_server() {
+push_to_backup_server()
+{
     if [[ -z "$1" || -z "$2" || -z "$3" ]]; then
         echo "Usage: push_to_backup_server <local_user> <local_repo> <ssh_server>"
         return
@@ -179,7 +188,8 @@ push_to_backup_server() {
     cd - > /dev/null
 }
 
-repack_and_gc() {
+repack_and_gc()
+{
     if [[ -z "$1" || -z "$2" ]]; then
         echo "Usage: repack_and_gc <local_user> <local_repo>"
         return
@@ -195,7 +205,8 @@ repack_and_gc() {
     cd -
 }
 
-backup_repo() {
+backup_repo()
+{
     if [[ -z "$1" || -z "$2" || -z "$3" ]]; then
         echo "Usage: backup_repo <local_user> <local_repo> <ssh_server> <remote_location>"
         return
@@ -318,7 +329,8 @@ backup_all_repos() {
     done
 }
 
-send_log_to_servers() {
+send_log_to_servers()
+{
     log "Sending logs..."
     for (( i=0; i<${#backup_servers[@]}; i=i+2 )); do
         #ssh -F /home/${me}/.ssh/config ${backup_servers[${i}]} "mkdir -p ${backup_servers[$((${i}+1))]}/logs/"
