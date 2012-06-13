@@ -128,10 +128,11 @@ setup_repo_for_pushing()
     fi
     local remotes=(`${git} remote`)
     local remote_present="false"
+    # Find if the remote we want to add already exists.
     for remote in ${remotes[@]}; do
-#         # Prune the remote's branches.
-#         echo "Pruning..."
-#         ${sudo/USER/${local_user}} ${git} remote prune ${remote}                        2>&1 | tee -a ${logfile}
+        ## Prune the remote's branches.
+        #echo "Pruning..."
+        #${sudo/USER/${local_user}} ${git} remote prune ${remote}                        2>&1 | tee -a ${logfile}
 
         if [[ "${remote}" == "${remote_name}" ]]; then
             remote_present="true"
