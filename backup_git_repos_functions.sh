@@ -87,6 +87,8 @@ verify_variables()
         exit 6
     fi
 
+    # "git" variable defaults to "git"
+    git=${git:-git}
     ${git} help &> /dev/null
     if [[ "$?" != "0" ]]; then
         warning "ERROR: git executable not found! Please set set a valid one using \"git\" in git_repos.conf!"
