@@ -338,8 +338,8 @@ loop_over_all_repos_and_remotes()
         list_user_repos ${user}
         for (( i=0; i<${#backup_servers[@]}; i=i+2 )); do
             log  "${s}${action_string} ${user}'s repos to ${backup_servers[${i}]}..."    2>&1 | tee -a ${logfile}
-            for ((i = 0 ; i < ${#repos[@]} ; i++)); do
-                repo="${repos[i]}"
+            for ((j = 0 ; j < ${#repos[@]} ; j++)); do
+                repo="${repos[j]}"
                 log "${s}${s}${action_string} ${user}'s ${repo}..." \
                                                                                     2>&1 | tee -a ${logfile}
                 eval `echo "$cmd"`
