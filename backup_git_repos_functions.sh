@@ -139,16 +139,6 @@ setup_repo_for_pushing()
         fi
     done
 
-    # Make sure $me can touch refs/heads/master.lock
-    # Store previous permission to restore later
-    local prev_permissions_heads=`\ls refs/heads -dl | awk '{print ""$1""}'`
-    chmod o+w refs/heads
-    chmod g+w refs/heads
-    local prev_permissions_tags=`\ls refs/tags -dl | awk '{print ""$1""}'`
-    chmod o+w refs/tags
-    chmod g+w refs/tags
-    chown ${me}:users -R refs/remotes
-
     if [[ "${remote_present}" == "false" ]]; then
         # Add remote
         #${sudo/USER/${local_user}} ${git} remote add --mirror ${remote_name} ssh://${ssh_server}${remote_location}/${local_user}/${local_repo} \
@@ -213,28 +203,8 @@ push_to_backup_server()
     #    push_branch ${branch} backup_${ssh_server}
     #done
 
-    # Restore permission on "refs/heads" folder
-    if [[ "${prev_permissions_heads:5:1}" == "-" ]]; then
-        chmod g-w refs/heads
-    else
-        chmod g+w refs/heads
-    fi
-    if [[ "${prev_permissions_heads:8:1}" == "-" ]]; then
-        chmod o-w refs/heads
-    else
-        chmod o+w refs/heads
-    fi
 
-    # Restore permission on "refs/tags" folder
-    if [[ "${prev_permissions_tags:5:1}" == "-" ]]; then
-        chmod g-w refs/heads
     else
-        chmod g+w refs/heads
-    fi
-    if [[ "${prev_permissions_tags:8:1}" == "-" ]]; then
-        chmod o-w refs/heads
-    else
-        chmod o+w refs/heads
     fi
 
     popd > /dev/null
