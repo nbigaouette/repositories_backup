@@ -199,13 +199,6 @@ push_to_backup_server()
     #echo "${s}${s}${s}$cmd"                                                     2>&1 | tee -a ${logfile}
     $cmd                                                                        2>&1 | tee -a ${logfile}
 
-    # No need to push branches. Setting up a mirror in setup_repo_for_pushing() is enough
-    #branches=(`list_local_branches`)
-    #log "Pushing branches: ${branches[*]}"                                      2>&1 | tee -a ${logfile}
-    #for branch in ${branches[*]}; do
-    #    push_branch ${branch} backup_${ssh_server}
-    #done
-
 
     else
     fi
