@@ -101,7 +101,7 @@ create_remote_repo()
 
     local cmd="mkdir -p ${remote_repo} && cd \"${remote_repo}\" && if [[ ! -e 'config' ]]; then git --bare init; fi"
     local ssh_cmd="${sudo/USER/${me}} ssh ${ssh_server} ${cmd}"
-    #echo "${s}${s}${s}${ssh_cmd}"                                               2>&1 | tee -a ${logfile}
+    echo "${s}${s}${s}${s}> ${ssh_cmd}"                                         2>&1 | tee -a ${logfile}
     ${ssh_cmd}
 }
 
