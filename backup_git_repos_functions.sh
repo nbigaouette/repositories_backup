@@ -102,6 +102,7 @@ verify_remotes()
     log "Verifying all remotes..."
     local bad_repos=()
     local jj=0
+    local cmd
     for (( i=0; i<${#backup_servers[@]}; i=i+2 )); do
         cmd="${sudo/USER/${me}} ssh ${ssh_options} ${backup_servers[i]} 'whoami'"
         $cmd > /dev/null
