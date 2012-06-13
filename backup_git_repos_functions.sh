@@ -139,18 +139,21 @@ setup_repo_for_pushing()
         fi
     done
 
+    local cmd
     if [[ "${remote_present}" == "false" ]]; then
         # Add remote
-        #${sudo/USER/${local_user}} ${git} remote add --mirror ${remote_name} ssh://${ssh_server}${remote_location}/${local_user}/${local_repo} \
-        ${sudo/USER/${local_user}} ${git} remote add --mirror=push ${remote_name} ssh://${ssh_server}${remote_location}/${local_user}/${local_repo} \
-                                                                            2>&1 | tee -a ${logfile}
+        cmd="${sudo/USER/${local_user}} ${git} remote add --mirror=push ${remote_name} ssh://${ssh_server}${remote_location}/${local_user}/${local_repo}"
     else
         # Make sure the url of the remote is set correctly
-        ${sudo/USER/${local_user}} ${git} remote set-url        ${remote_name} ssh://${ssh_server}${remote_location}/${local_user}/${local_repo} \
-                                                                                2>&1 | tee -a ${logfile}
+        cmd="${sudo/USER/${local_user}} ${git} remote set-url           ${remote_name} ssh://${ssh_server}${remote_location}/${local_user}/${local_repo}"
     fi
-    ${sudo/USER/${local_user}} ${git} remote set-url --push ${remote_name} ssh://${ssh_server}${remote_location}/${local_user}/${local_repo} \
-                                                                            2>&1 | tee -a ${logfile}
+    echo "${s}${s}${s}${s}> $cmd"                                                   2>&1 | tee -a ${logfile}
+    $cmd                                                                            2>&1 | tee -a ${logfile}
+
+    cmd="${sudo/USER/${local_user}} ${git} remote set-url --push    ${remote_name} ssh://${ssh_server}${remote_location}/${local_user}/${local_repo}"
+    echo "${s}${s}${s}${s}> $cmd"                                                   2>&1 | tee -a ${logfile}
+    $cmd                                                                            2>&1 | tee -a ${logfile}
+
     popd > /dev/null
 }
 
