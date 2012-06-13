@@ -54,6 +54,46 @@ warning()
     echo -e "${r}${@}${n}"
 }
 
+verify_variables()
+{
+    if [[ -z "${repos_path}" ]]; then
+        warning "ERROR: Please set the path where the git repos are located by setting \"repos_path\" in git_repos.conf!"
+        exit 1
+    fi
+
+    if [[ ! -d "${repos_path}" ]]; then
+        warning "ERROR: Can't find path repos_path=${repos_path}"
+        exit 2
+    fi
+
+    if [[ -z "${me}" ]]; then
+        warning "ERROR: Please set the user account to use when connecting through ssh by setting \"me\" in git_repos.conf!"
+        exit 3
+    fi
+
+    id ${me} &> /dev/null
+    if [[ "$?" != "0" ]]; then
+        warning "ERROR: User \"${me}\" not valid! Please set a valid user account to use when connecting through ssh by setting \"me\" in git_repos.conf!"
+        exit 4
+    fi
+
+    if [[ -z "${group}" ]]; then
+        warning "ERROR: Please set the group for repository ownership by setting \"group\" in git_repos.conf!"
+        exit 5
+    fi
+
+    if [[ -z "${backup_servers}" || "${#backup_servers[@]}" == "0" ]]; then
+        warning "ERROR: Please set at least one backup server by setting \"backup_servers\" in git_repos.conf!"
+        exit 6
+    fi
+
+    ${git} help &> /dev/null
+    if [[ "$?" != "0" ]]; then
+        warning "ERROR: git executable not found! Please set set a valid one using \"git\" in git_repos.conf!"
+        exit 7
+    fi
+}
+
 list_users()
 {
     unset users
@@ -333,6 +373,8 @@ loop_over_all_repos()
     local action_string="$1"
     local cmd="$2"
 
+    verify_variables
+
     local users=`list_users`
     for user in ${users[@]}; do
         echo "${stars}"                                                         2>&1 | tee -a ${logfile}
@@ -359,6 +401,8 @@ loop_over_all_repos_and_remotes()
     fi
     local action_string="$1"
     local cmd="$2"
+
+    verify_variables
 
     local users=`list_users`
     for user in ${users[@]}; do
