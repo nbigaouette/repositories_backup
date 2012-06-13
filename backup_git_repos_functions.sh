@@ -21,6 +21,7 @@
 now=`date +%Y%m%d_%Hh%M`
 pwd=`pwd`
 logfile=${logdir}/git_backup_${now}.log
+ssh_options="-o ConnectTimeout=2 -o PasswordAuthentication=no"
 
 
 stars="*********************************************************"
@@ -93,6 +94,30 @@ verify_variables()
     if [[ "$?" != "0" ]]; then
         warning "ERROR: git executable not found! Please set set a valid one using \"git\" in git_repos.conf!"
         exit 7
+    fi
+}
+
+verify_remotes()
+{
+    log "Verifying all remotes..."
+    local bad_repos=()
+    local jj=0
+    for (( i=0; i<${#backup_servers[@]}; i=i+2 )); do
+        cmd="${sudo/USER/${me}} ssh ${ssh_options} ${backup_servers[i]} 'whoami'"
+        $cmd > /dev/null
+        if [[ "$?" != "0" ]]; then
+            bad_repos[$jj]="${backup_servers[i]}"
+            jj=$(($jj+1))
+        fi
+    done
+    if [[ "${#bad_repos}" != "0" ]]; then
+        warning "ERROR: Some (${jj}) ssh servers could not be contacted!"
+        for (( i=0; i<${jj}; i=i+1 )); do
+            warning "${s}${bad_repos[i]}"
+        done
+        exit 7
+    else
+        log "Done."
     fi
 }
 
@@ -408,6 +433,8 @@ loop_over_all_repos_and_remotes()
     local cmd="$2"
 
     verify_variables
+
+    verify_remotes
 
     local users=`list_users`
     for user in ${users[@]}; do
