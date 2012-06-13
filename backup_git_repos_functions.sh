@@ -187,8 +187,7 @@ push_to_backup_server()
     local local_repo="$2"
     local ssh_server="$3"
 
-    log "${s}${s}${s}Pushing ${local_user}'s ${local_repo} to push to ${ssh_server}..." \
-                                                                                2>&1 | tee -a ${logfile}
+    log "${s}${s}${s}Pushing ${local_user}'s ${local_repo} to ${ssh_server}..." 2>&1 | tee -a ${logfile}
 
     pushd "${repos_path}/${local_user}/${local_repo}" > /dev/null
     if [[ "$?" != "0" ]]; then
