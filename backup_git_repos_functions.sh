@@ -195,12 +195,16 @@ push_to_backup_server()
         warning "Can't go into directory \"${repos_path}/${local_user}/${local_repo}\" Can't push to backup server ($ssh_server)!"
         return
     fi
-    local cmd="${sudo/USER/${me}} ${git} push backup_${ssh_server}"
-    #echo "${s}${s}${s}$cmd"                                                     2>&1 | tee -a ${logfile}
-    $cmd                                                                        2>&1 | tee -a ${logfile}
 
-
+    # Detect if repository is empty. If not, then push.
+    git log -n 1 &> /dev/null
+    if [[ "$?" == "0" ]]; then
+        local cmd="${sudo/USER/${me}} ${git} push backup_${ssh_server}"
+        echo "${s}${s}${s}${s}> $cmd"                                           2>&1 | tee -a ${logfile}
+        $cmd                                                                    2>&1 | tee -a ${logfile}
     else
+        log "${s}${s}${s}${s}Repository ${local_repo} is empty, not pushing to ${ssh_server}." \
+                                                                                2>&1 | tee -a ${logfile}
     fi
 
     popd > /dev/null
