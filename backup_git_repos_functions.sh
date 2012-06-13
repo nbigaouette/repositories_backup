@@ -42,6 +42,7 @@ prev_permissions_tags=""
 cmd_backup_all_repos="backup_repo \"\${user}\" \"\${repo}\" \"\${backup_servers[\${i}]}\" \"\${backup_servers[\$((\${i}+1))]}\""
 cmd_pack_all_repos="repack_and_gc \"\${user}\" \"\${repo}\""
 cmd_fix_permissions="fix_permissions \"\${user}\" \"\${repo}\""
+cmd_cleanup_remotes="cleanup_remotes \"\${user}\" \"\${repo}\""
 
 log()
 {
@@ -245,6 +246,37 @@ fix_permissions()
     # Repair permissions
     cmd="chmod -R g+r *"
     $cmd                                                                        2>&1 | tee -a ${logfile}
+    popd > /dev/null
+}
+
+cleanup_remotes()
+{
+    if [[ -z "$1" || -z "$2" ]]; then
+        echo "Usage: cmd_cleanup_remotes <local_user> <local_repo>"
+        return
+    fi
+    local local_user="$1"
+    local local_repo="$2"
+
+    if [[ "$UID" != "0" ]]; then
+        log "cmd_cleanup_remotes() will probably work better if run as root!"
+        exit
+    fi
+
+    local cmd
+
+    pushd "${repos_path}/${local_user}/${local_repo}" > /dev/null
+    if [[ "$?" != "0" ]]; then
+        warning "Can't go into directory \"${repos_path}/${local_user}/${local_repo}\" Not cleaning up remotes!"
+        return
+    fi
+
+    remotes=(`${git} remote`)
+    for remote in ${remotes[@]}; do
+        # Delete remote
+        ${sudo/USER/${local_user}} ${git} remote rm ${remote} || (warning "Deleting remote ${remote} from ${local_user}'s ${local_repo} failed!" && return)
+    done
+
     popd > /dev/null
 }
 
