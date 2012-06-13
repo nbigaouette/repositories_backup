@@ -159,9 +159,12 @@ setup_repo_for_pushing()
     local ssh_server="$3"
     local remote_location="$4"
 
+    # Make sure "local_repo" does not contain un-escaped spaces
+    local remote_repo="${remote_location}/${local_user}/${local_repo/ /\\ }"
+
     local remote_name="backup_${ssh_server}"
 
-    log "${s}${s}${s}Setting up ${local_user}'s ${local_repo} to push to ${remote_location} on ${ssh_server}..." \
+    log "${s}${s}${s}Setting up ${local_user}'s ${local_repo} to push to ${remote_repo} on ${ssh_server}..." \
                                                                                 2>&1 | tee -a ${logfile}
 
     pushd "${repos_path}/${local_user}/${local_repo}" > /dev/null
@@ -185,17 +188,17 @@ setup_repo_for_pushing()
     local cmd
     if [[ "${remote_present}" == "false" ]]; then
         # Add remote
-        cmd="${sudo/USER/${local_user}} ${git} remote add --mirror=push ${remote_name} ssh://${ssh_server}${remote_location}/${local_user}/${local_repo}"
+        cmd="${sudo/USER/${local_user}} ${git} remote add --mirror=push ${remote_name} ssh://${ssh_server}${remote_repo}"
     else
         # Make sure the url of the remote is set correctly
-        cmd="${sudo/USER/${local_user}} ${git} remote set-url           ${remote_name} ssh://${ssh_server}${remote_location}/${local_user}/${local_repo}"
+        cmd="${sudo/USER/${local_user}} ${git} remote set-url           ${remote_name} ssh://${ssh_server}${remote_repo}"
     fi
-    echo "${s}${s}${s}${s}> $cmd"                                                   2>&1 | tee -a ${logfile}
-    $cmd                                                                            2>&1 | tee -a ${logfile}
+    echo "${s}${s}${s}${s}> $cmd"                                               2>&1 | tee -a ${logfile}
+    eval $cmd                                                                   2>&1 | tee -a ${logfile}
 
-    cmd="${sudo/USER/${local_user}} ${git} remote set-url --push    ${remote_name} ssh://${ssh_server}${remote_location}/${local_user}/${local_repo}"
-    echo "${s}${s}${s}${s}> $cmd"                                                   2>&1 | tee -a ${logfile}
-    $cmd                                                                            2>&1 | tee -a ${logfile}
+    cmd="${sudo/USER/${local_user}} ${git} remote set-url --push    ${remote_name} ssh://${ssh_server}${remote_repo}"
+    echo "${s}${s}${s}${s}> $cmd"                                               2>&1 | tee -a ${logfile}
+    eval $cmd                                                                   2>&1 | tee -a ${logfile}
 
     popd > /dev/null
 }
